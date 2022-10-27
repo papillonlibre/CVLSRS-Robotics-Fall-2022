@@ -1,0 +1,23 @@
+syntax = "proto2";
+
+message Target {
+
+    required Shape shape = 1;
+    required Color color = 2;
+
+    enum Shape {
+        SQUARE = 0;
+        CIRCLE = 1;
+        TRIANGLE = 2;
+        OCTAGON = 3;
+    }
+    
+    enum Color {
+        RED = 0;
+        YELLOW = 1;
+        BLUE = 2;
+        GREEN = 3;
+    }
+
+  }
+  
