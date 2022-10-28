@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # NAME: server.py
-# PURPOSE: runs a local robomodules server
+# PURPOSE: runs a robomodules server
 # AUTHOR: Harvard Undergraduate Robotics Club
 
 import robomodules

@@ -41,8 +41,9 @@ class CommsModule(rm.ProtoModule):
         self.subscriptions = []
         super().__init__(local_addr, local_port, message_buffers, MsgType, LOCAL_FREQUENCY, self.subscriptions)
         self.server_module = ServerClient(server_addr, server_port, self.loop)
-        self.server_module.connect()
         self.current_target = None
+
+        self.server_module.connect()
 
     def msg_received(self, msg, msg_type):
         pass
