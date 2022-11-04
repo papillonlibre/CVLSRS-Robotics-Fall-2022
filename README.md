@@ -2,7 +2,7 @@
 
 Welcome to the official starter code for the 2022 CVLSRS (Computer Vision Laser Space Robot Satellite) Competition!
 
-This code is implemented using `robomodules`, a Python framework that models a robot as a set of isolated modules that pass messages between each other over a server. In genral, modules publish messages of specified types to the server, which are then picked up and processed by the modules subscribed to those message types. For more information on Robomodules, see the [official documentation](https://github.com/HarvardURC/robomodules#robomodules).
+This code is implemented using Robomodules, a Python framework that models a robot as a set of isolated modules that pass messages between each other over a server. In genral, modules publish messages of specified types to the server, which are then picked up and processed by the modules subscribed to those message types. For more information on Robomodules, see the [official documentation](https://github.com/HarvardURC/robomodules#robomodules).
 
 ## Messages
 
@@ -46,4 +46,4 @@ This will start up an instance of the comms module that picks up messages from t
 
 #### From Local Module
 
-For testing, you can also just run a version of the target sender module- which is included in this repository- locally. For this, just run `python3 target_sender_module.py`. Any time you press the enter key while in this command line window, a new Target command will be generated and send to your local robomodules server.
+For testing, you can also just run a version of the target sender module- which is included in this repository- locally. For this, just run `python3 target_sender_module.py` (no need to set any special environment variables since its running on your local Robomodules server). Any time you press the enter key while in this command line window, a new Target command will be generated and send to your local robomodules server.
