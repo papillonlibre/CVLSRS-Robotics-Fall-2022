@@ -13,6 +13,7 @@ PORT = os.environ.get("LOCAL_PORT", 11295)
 
 def main():
     server = robomodules.Server(ADDRESS, PORT, MsgType)
+    print(f'running server on {ADDRESS}:{PORT}')
     server.run()
 
 if __name__ == "__main__":

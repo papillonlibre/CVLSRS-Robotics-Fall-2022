@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# NAME: commsModule.py
+# NAME: comms_module.py
 # PURPOSE: forwards vision target commands from game server to local server
 # AUTHOR: Emma Bethel
 

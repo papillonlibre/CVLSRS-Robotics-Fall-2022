@@ -1,0 +1,8 @@
+syntax = "proto2";
+
+message RotationCommand {
+
+    required float position = 1;
+    required float max_speed = 2;
+
+  }
