@@ -12,7 +12,6 @@
 
 import os
 import robomodules as rm
-import numpy as np
 
 from gpiozero import PhaseEnableMotor, Servo, RotaryEncoder
 from messages import MsgType, message_buffers

@@ -1,7 +1,0 @@
-syntax = "proto2";
-
-message EmitterCommand {
-
-    required float seconds = 1;
-
-  }
