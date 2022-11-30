@@ -18,12 +18,18 @@ FREQUENCY = 2
 class ShapeHandling(rm.ProtoModule):
     # sets up the module (subscriptions, connection to server, etc)
     def __init__(self, addr, port):
-        self.subscriptions = []
+        self.subscriptions = [MsgType.TARGET]
         super().__init__(addr, port, message_buffers, MsgType, FREQUENCY, self.subscriptions)
 
     # runs every time one of the subscribed-to message types is received
     def msg_received(self, msg, msg_type):
-        pass
+        cf = CameraFeed(0)
+        if (msg_type == MsgType):
+            if (msg.shape == 0):
+                findSquares(cf.read())
+            elif (msg.shape == 1):
+                
+            
 
     # runs every 1 / FREQUENCY seconds
     def tick(self):
