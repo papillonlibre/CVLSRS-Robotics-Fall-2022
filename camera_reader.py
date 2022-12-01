@@ -30,6 +30,7 @@ class CameraFeed:
     def _reader(self):
         while True:
             ret, frame = self.cap.read()
+            
             if not ret:
                 break
             if not self.q.empty():
