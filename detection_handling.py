@@ -10,6 +10,7 @@ from messages import MsgType, message_buffers
 import cv2
 from camera_reader import CameraFeed
 import numpy as np
+from emitter import Emitter
 
 # retrieving address and port of robomodules server (from env vars)
 ADDRESS = os.environ.get("LOCAL_ADDRESS","localhost")
@@ -134,6 +135,7 @@ class ShapeHandling(rm.ProtoModule):
     
     def find_triangles(image):
       # finding contours (edges of shapes) in image
+      e = Emitter()
       edges = cv2.Canny(image, 30, 200)
       contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
@@ -145,11 +147,13 @@ class ShapeHandling(rm.ProtoModule):
 
         if len(approx) == 3:
           triangle_count += 1
-          cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
+          e.send_pulse()
+          #cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
 
       return output_image, triangle_count
     def find_squares(image):
       # finding contours (edges of shapes) in image
+      e = Emitter()
       edges = cv2.Canny(image, 30, 200)
       contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
@@ -161,11 +165,13 @@ class ShapeHandling(rm.ProtoModule):
 
         if len(approx) == 4:
           square_count += 1
-          cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
+          e.send_pulse()
+          #cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
 
       return output_image, square_count
   
     def find_octagons(image):
+      e = Emitter()
       # finding contours (edges of shapes) in image
       edges = cv2.Canny(image, 30, 200)
       contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
@@ -178,11 +184,13 @@ class ShapeHandling(rm.ProtoModule):
 
         if len(approx) == 8:
           triangle_count += 1
-          cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
+          e.send_pulse()
+          #cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
 
       return output_image, octagons_count
   
     def find_circles(image):
+      e = Emitter()
       # finding contours (edges of shapes) in image
       edges = cv2.Canny(image, 30, 200)
       contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
@@ -195,7 +203,8 @@ class ShapeHandling(rm.ProtoModule):
 
         if len(approx) > 8: #might want to increase to fix the threshold
           circle_count += 1
-          cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
+          # cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
+          e.send_pulse(0)
 
       return output_image, circle_count
 
