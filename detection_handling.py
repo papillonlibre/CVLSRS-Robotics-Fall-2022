@@ -11,12 +11,15 @@ import cv2
 from camera_reader import CameraFeed
 import numpy as np
 from emitter import Emitter
+from messages import MsgType, message_buffers, rotationCommand
 
 # retrieving address and port of robomodules server (from env vars)
 ADDRESS = os.environ.get("LOCAL_ADDRESS","localhost")
 PORT = os.environ.get("LOCAL_PORT", 11295)
 
 FREQUENCY = 2
+
+START_POS = -1
 
 
 class ShapeHandling(rm.ProtoModule):
@@ -133,7 +136,7 @@ class ShapeHandling(rm.ProtoModule):
       # cv2.imshow("Output", output)
       
     
-    def find_triangles(image):
+    def find_triangles(self, image, START_POS):
       # finding contours (edges of shapes) in image
       e = Emitter()
       edges = cv2.Canny(image, 30, 200)
@@ -149,9 +152,14 @@ class ShapeHandling(rm.ProtoModule):
           triangle_count += 1
           e.send_pulse()
           #cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
+        if (triangle_count == 0):
+          msg = rotationCommand()
+          START_POS += .1
+          msg.position = START_POS
+          self.write(msg.SerializeToString(), MsgType.ROTATION_COMMAND)
 
       return output_image, triangle_count
-    def find_squares(image):
+    def find_squares(self, image, START_POS):
       # finding contours (edges of shapes) in image
       e = Emitter()
       edges = cv2.Canny(image, 30, 200)
@@ -167,10 +175,15 @@ class ShapeHandling(rm.ProtoModule):
           square_count += 1
           e.send_pulse()
           #cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
+        if (square_count == 0):
+          msg = rotationCommand()
+          START_POS += .1
+          msg.position = START_POS
+          self.write(msg.SerializeToString(), MsgType.ROTATION_COMMAND)
 
       return output_image, square_count
   
-    def find_octagons(image):
+    def find_octagons(self, image, START_POS):
       e = Emitter()
       # finding contours (edges of shapes) in image
       edges = cv2.Canny(image, 30, 200)
@@ -183,13 +196,18 @@ class ShapeHandling(rm.ProtoModule):
         approx = cv2.approxPolyDP(contour, 1.95, True)
 
         if len(approx) == 8:
-          triangle_count += 1
+          octagons_count += 1
           e.send_pulse()
           #cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
+        if (octagons_count == 0):
+          msg = rotationCommand()
+          START_POS += .1
+          msg.position = START_POS
+          self.write(msg.SerializeToString(), MsgType.ROTATION_COMMAND)
 
       return output_image, octagons_count
   
-    def find_circles(image):
+    def find_circles(self, image, START_POS):
       e = Emitter()
       # finding contours (edges of shapes) in image
       edges = cv2.Canny(image, 30, 200)
@@ -205,12 +223,25 @@ class ShapeHandling(rm.ProtoModule):
           circle_count += 1
           # cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
           e.send_pulse(0)
+        
+        if (circle_count == 0):
+          msg = rotationCommand()
+          START_POS += .1
+          msg.position = START_POS
+          self.write(msg.SerializeToString(), MsgType.ROTATION_COMMAND)
+
+        
+
 
       return output_image, circle_count
 
 # runs every time one of the subscribed-to message types is received
     def msg_received(self, msg, msg_type):
         cf = CameraFeed(0)
+        msg = rotationCommand()
+        msg.position = START_POS
+        self.write(msg.SerializeToString(), MsgType.ROTATION_COMMAND)
+
         
         if (msg_type == MsgType):
           # control logic for detecting colors
@@ -225,15 +256,14 @@ class ShapeHandling(rm.ProtoModule):
           
           # color detection on the new masked camera feed frame read
           if (msg.Shape == 0):
-              self.find_squares(cf2)
+              self.find_squares(cf2, START_POS)
           elif (msg.Shape == 1):
-              self.find_circles(cf2)
+              self.find_circles(cf2, START_POS)
           elif (msg.Shape == 2):
-              self.find_triangles(cf2)
+              self.find_triangles(cf2, START_POS)
           elif (msg.Shape == 3):
-              self.find_octagons(cf2)
-               
-        
+              self.find_octagons(cf2, START_POS)
+
 
 def main():
     module = ShapeHandling(ADDRESS, PORT)
