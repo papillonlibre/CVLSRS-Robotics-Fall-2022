@@ -33,7 +33,7 @@ ENCODER_PINS = (17, 18)
 class MotorModule(rm.ProtoModule):
     # sets up the module (subscriptions, connection to server, etc)
     def __init__(self, addr, port):
-        self.subscriptions = [MsgType.ROTATION_COMMAND, MsgType.TILT_COMMAND, MsgType.ENCODER_VALUE]
+        self.subscriptions = [MsgType.ROTATION_COMMAND, MsgType.TILT_COMMAND]
         super().__init__(addr, port, message_buffers, MsgType, FREQUENCY, self.subscriptions)
 
         # initializing motors and encoder
@@ -42,7 +42,7 @@ class MotorModule(rm.ProtoModule):
         self.encoder = RotaryEncoder(*ENCODER_PINS, max_steps=0)
 
         # setting up PID controller
-        self.pid = PID(0.025, 0, 0)
+        self.pid = PID(0.075, 0, 0)
         self.pid.sample_time = 0.01
         self.pid.output_limits = (-1.0, 1.0)
         self.pid.setpoint = 0

@@ -11,7 +11,7 @@ import cv2
 from camera_reader import CameraFeed
 import numpy as np
 from emitter import Emitter
-from messages import MsgType, message_buffers, rotationCommand
+from messages import MsgType, message_buffers, RotationCommand
 
 # retrieving address and port of robomodules server (from env vars)
 ADDRESS = os.environ.get("LOCAL_ADDRESS","localhost")
@@ -20,6 +20,9 @@ PORT = os.environ.get("LOCAL_PORT", 11295)
 FREQUENCY = 2
 
 START_POS = -1
+
+e = Emitter()
+cf = CameraFeed(0)
 
 
 class ShapeHandling(rm.ProtoModule):
@@ -33,7 +36,7 @@ class ShapeHandling(rm.ProtoModule):
     def tick(self):
         pass
     
-    def find_green(image):
+    def find_green(self,image):
       # convert to hsv colorspace
       hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
       # lower bound and upper bound for Green color
@@ -59,7 +62,7 @@ class ShapeHandling(rm.ProtoModule):
       # # Showing the output
       # cv2.imshow("Output", output)
 
-    def find_yellow(image):
+    def find_yellow(self,image):
       # convert to hsv colorspace
       # lower bound and upper bound for Yellow color
       hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -84,7 +87,7 @@ class ShapeHandling(rm.ProtoModule):
       return output
       # # Showing the output
       # cv2.imshow("Output", output)
-    def find_red(image):
+    def find_red(self,image):
       # convert to hsv colorspace
       # lower bound and upper bound for Red color
       hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -109,7 +112,7 @@ class ShapeHandling(rm.ProtoModule):
       return output
       # # Showing the output
       # cv2.imshow("Output", output)
-    def find_blue(image):
+    def find_blue(self,image):
       # convert to hsv colorspace
       # lower bound and upper bound for Blue color
       hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -133,12 +136,12 @@ class ShapeHandling(rm.ProtoModule):
       output = cv2.drawContours(segmented_img, contours, -1, (0, 0, 255), 3)
       return output
       # # Showing the output
-      # cv2.imshow("Output", output)
+      cv2.imshow("Output", output)
       
     
     def find_triangles(self, image, START_POS):
+      print("finding triangles")
       # finding contours (edges of shapes) in image
-      e = Emitter()
       edges = cv2.Canny(image, 30, 200)
       contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
@@ -149,19 +152,22 @@ class ShapeHandling(rm.ProtoModule):
         approx = cv2.approxPolyDP(contour, 1.95, True)
 
         if len(approx) == 3:
+          print("triangle found")
           triangle_count += 1
           e.send_pulse()
           #cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
         if (triangle_count == 0):
-          msg = rotationCommand()
+          print("no triangles")
+          msg = RotationCommand()
           START_POS += .1
           msg.position = START_POS
+          msg.max_speed = 1
           self.write(msg.SerializeToString(), MsgType.ROTATION_COMMAND)
 
       return output_image, triangle_count
     def find_squares(self, image, START_POS):
+      print("FIND SQUARES WAS CALLED")
       # finding contours (edges of shapes) in image
-      e = Emitter()
       edges = cv2.Canny(image, 30, 200)
       contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
@@ -173,18 +179,23 @@ class ShapeHandling(rm.ProtoModule):
 
         if len(approx) == 4:
           square_count += 1
+          print("square found")
           e.send_pulse()
           #cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
         if (square_count == 0):
-          msg = rotationCommand()
+          print("no squares")
+          msg = RotationCommand()
           START_POS += .1
           msg.position = START_POS
+          msg.max_speed = 1
           self.write(msg.SerializeToString(), MsgType.ROTATION_COMMAND)
+          print ("square not found")
+        # print("DEBUGGING SQUARE_COUNT", square_count)
 
       return output_image, square_count
   
     def find_octagons(self, image, START_POS):
-      e = Emitter()
+      print("finding octagons")
       # finding contours (edges of shapes) in image
       edges = cv2.Canny(image, 30, 200)
       contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
@@ -196,20 +207,23 @@ class ShapeHandling(rm.ProtoModule):
         approx = cv2.approxPolyDP(contour, 1.95, True)
 
         if len(approx) == 8:
+          print("found octagon")
           octagons_count += 1
           e.send_pulse()
           #cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
         if (octagons_count == 0):
-          msg = rotationCommand()
+          print("no octagon found")
+          msg = RotationCommand()
           START_POS += .1
           msg.position = START_POS
+          msg.max_speed = 1
           self.write(msg.SerializeToString(), MsgType.ROTATION_COMMAND)
 
       return output_image, octagons_count
   
     def find_circles(self, image, START_POS):
-      e = Emitter()
       # finding contours (edges of shapes) in image
+      print("looking for circles")
       edges = cv2.Canny(image, 30, 200)
       contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
@@ -220,49 +234,52 @@ class ShapeHandling(rm.ProtoModule):
         approx = cv2.approxPolyDP(contour, 1.95, True)
 
         if len(approx) > 8: #might want to increase to fix the threshold
+          print("circle found")
           circle_count += 1
           # cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
           e.send_pulse(0)
         
         if (circle_count == 0):
-          msg = rotationCommand()
+          print("no circle found")
+          msg = RotationCommand()
           START_POS += .1
           msg.position = START_POS
+          msg.max_speed = 1
           self.write(msg.SerializeToString(), MsgType.ROTATION_COMMAND)
-
-        
-
 
       return output_image, circle_count
 
 # runs every time one of the subscribed-to message types is received
     def msg_received(self, msg, msg_type):
-        cf = CameraFeed(0)
-        msg = rotationCommand()
-        msg.position = START_POS
-        self.write(msg.SerializeToString(), MsgType.ROTATION_COMMAND)
+        msg2 = RotationCommand()
+        msg2.position = START_POS
+        msg2.max_speed = 1
+        self.write(msg2.SerializeToString(), MsgType.ROTATION_COMMAND)
 
         
-        if (msg_type == MsgType):
+        if (msg_type == MsgType.TARGET):
+          # print ("target message was found")
           # control logic for detecting colors
-          if (msg.Color== 0):
+          if (msg.color== 0):
             cf2 = self.find_red(cf.read())
-          elif (msg.Color == 1):
+          elif (msg.color == 1):
             cf2 = self.find_yellow(cf.read())
-          elif (msg.Color == 2):
+          elif (msg.color == 2):
             cf2 = self.find_blue(cf.read())
-          elif(msg.Color == 3):
+          elif(msg.color == 3):
+            # print ("green was found")
             cf2 = self.find_green(cf.read())
           
           # color detection on the new masked camera feed frame read
-          if (msg.Shape == 0):
-              self.find_squares(cf2, START_POS)
-          elif (msg.Shape == 1):
-              self.find_circles(cf2, START_POS)
-          elif (msg.Shape == 2):
-              self.find_triangles(cf2, START_POS)
-          elif (msg.Shape == 3):
-              self.find_octagons(cf2, START_POS)
+          if (msg.shape == 0):
+            print("looking for squares")
+            self.find_squares(cf2, START_POS)
+          elif (msg.shape == 1):
+            self.find_circles(cf2, START_POS)
+          elif (msg.shape == 2):
+            self.find_triangles(cf2, START_POS)
+          elif (msg.shape == 3):
+            self.find_octagons(cf2, START_POS)
 
 
 def main():
