@@ -40,8 +40,8 @@ class ShapeHandling(rm.ProtoModule):
       # convert to hsv colorspace
       hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
       # lower bound and upper bound for Green color
-      lower_bound = np.array([50, 20, 20])   
-      upper_bound = np.array([100, 255, 255])
+      lower_bound = np.array([41, 130, 0])   
+      upper_bound = np.array([67, 255, 255])
       # find the colors within the boundaries
       mask = cv2.inRange(hsv, lower_bound, upper_bound)
 
@@ -58,16 +58,17 @@ class ShapeHandling(rm.ProtoModule):
 
 
       output = cv2.drawContours(segmented_img, contours, -1, (0, 0, 255), 3)
+      cv2.imshow("Output", output)
+      #cv2.waitKey(0)
       return output
       # # Showing the output
-      # cv2.imshow("Output", output)
 
     def find_yellow(self,image):
       # convert to hsv colorspace
       # lower bound and upper bound for Yellow color
       hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-      lower_bound = np.array([20, 80, 80])   
-      upper_bound = np.array([30, 255, 255])
+      lower_bound = np.array([86, 132, 0])   
+      upper_bound = np.array([98, 255, 255])
       # find the colors within the boundaries
       mask = cv2.inRange(hsv, lower_bound, upper_bound)
 
@@ -84,15 +85,16 @@ class ShapeHandling(rm.ProtoModule):
 
 
       output = cv2.drawContours(segmented_img, contours, -1, (0, 0, 255), 3)
+      # cv2.imshow("Output", output)
+      # cv2.waitKey(0)
       return output
       # # Showing the output
-      # cv2.imshow("Output", output)
     def find_red(self,image):
       # convert to hsv colorspace
       # lower bound and upper bound for Red color
       hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-      lower_bound = np.array([161, 155, 84])   
-      upper_bound = np.array([179, 255, 255])
+      lower_bound = np.array([110, 155, 0])   
+      upper_bound = np.array([128, 255, 255])
       # find the colors within the boundaries
       mask = cv2.inRange(hsv, lower_bound, upper_bound)
 
@@ -109,15 +111,16 @@ class ShapeHandling(rm.ProtoModule):
 
 
       output = cv2.drawContours(segmented_img, contours, -1, (0, 0, 255), 3)
+      # cv2.imshow("Output", output)
+      # cv2.waitKey(0)
       return output
       # # Showing the output
-      # cv2.imshow("Output", output)
     def find_blue(self,image):
       # convert to hsv colorspace
       # lower bound and upper bound for Blue color
       hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-      lower_bound = np.array([94,80,2])   
-      upper_bound = np.array([126, 255, 255])
+      lower_bound = np.array([0,153,2])   
+      upper_bound = np.array([23, 255, 255])
       # find the colors within the boundaries
       mask = cv2.inRange(hsv, lower_bound, upper_bound)
 
@@ -134,9 +137,10 @@ class ShapeHandling(rm.ProtoModule):
 
 
       output = cv2.drawContours(segmented_img, contours, -1, (0, 0, 255), 3)
+      # cv2.imshow("Output", output)
+      # cv2.waitKey(0)
       return output
       # # Showing the output
-      cv2.imshow("Output", output)
       
     
     def find_triangles(self, image, START_POS):
@@ -155,7 +159,7 @@ class ShapeHandling(rm.ProtoModule):
           print("triangle found")
           triangle_count += 1
           e.send_pulse()
-          #cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
+          cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
         if (triangle_count == 0):
           print("no triangles")
           msg = RotationCommand()
@@ -163,7 +167,9 @@ class ShapeHandling(rm.ProtoModule):
           msg.position = START_POS
           msg.max_speed = 1
           self.write(msg.SerializeToString(), MsgType.ROTATION_COMMAND)
-
+      # cv2.imshow("Output", output_image)
+      # if cv2.waitKey(1) & 0xFF == ord('q'):
+      #       break
       return output_image, triangle_count
     def find_squares(self, image, START_POS):
       print("FIND SQUARES WAS CALLED")
@@ -181,7 +187,7 @@ class ShapeHandling(rm.ProtoModule):
           square_count += 1
           print("square found")
           e.send_pulse()
-          #cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
+          cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
         if (square_count == 0):
           print("no squares")
           msg = RotationCommand()
@@ -191,7 +197,8 @@ class ShapeHandling(rm.ProtoModule):
           self.write(msg.SerializeToString(), MsgType.ROTATION_COMMAND)
           print ("square not found")
         # print("DEBUGGING SQUARE_COUNT", square_count)
-
+      # cv2.imshow("Output", output_image)
+      # cv2.waitKey(0)
       return output_image, square_count
   
     def find_octagons(self, image, START_POS):
@@ -210,7 +217,7 @@ class ShapeHandling(rm.ProtoModule):
           print("found octagon")
           octagons_count += 1
           e.send_pulse()
-          #cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
+          cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
         if (octagons_count == 0):
           print("no octagon found")
           msg = RotationCommand()
@@ -218,7 +225,8 @@ class ShapeHandling(rm.ProtoModule):
           msg.position = START_POS
           msg.max_speed = 1
           self.write(msg.SerializeToString(), MsgType.ROTATION_COMMAND)
-
+      # cv2.imshow("Output", output_image)
+      # cv2.waitKey(0)
       return output_image, octagons_count
   
     def find_circles(self, image, START_POS):
@@ -236,7 +244,7 @@ class ShapeHandling(rm.ProtoModule):
         if len(approx) > 8: #might want to increase to fix the threshold
           print("circle found")
           circle_count += 1
-          # cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
+          cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
           e.send_pulse(0)
         
         if (circle_count == 0):
@@ -246,7 +254,8 @@ class ShapeHandling(rm.ProtoModule):
           msg.position = START_POS
           msg.max_speed = 1
           self.write(msg.SerializeToString(), MsgType.ROTATION_COMMAND)
-
+      # cv2.imshow("Output", output_image)
+      # cv2.waitKey(0)
       return output_image, circle_count
 
 # runs every time one of the subscribed-to message types is received
@@ -273,13 +282,20 @@ class ShapeHandling(rm.ProtoModule):
           # color detection on the new masked camera feed frame read
           if (msg.shape == 0):
             print("looking for squares")
-            self.find_squares(cf2, START_POS)
+            output,count = self.find_squares(cf2, START_POS)
           elif (msg.shape == 1):
-            self.find_circles(cf2, START_POS)
+            output,count =self.find_circles(cf2, START_POS)
           elif (msg.shape == 2):
-            self.find_triangles(cf2, START_POS)
+            output,count =self.find_triangles(cf2, START_POS)
           elif (msg.shape == 3):
-            self.find_octagons(cf2, START_POS)
+            output,count = self.find_octagons(cf2, START_POS)
+          while True:
+            cv2.imshow("testing", output)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+            # sys.exit() # to exit from all the processes
+ 
+          cv2.destroyAllWindows() # destroy all windows
 
 
 def main():

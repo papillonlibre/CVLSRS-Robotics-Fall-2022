@@ -1,11 +1,15 @@
 from camera_reader import CameraFeed
 import cv2
 import sys
-from detection_handling import find_blue, find_squares
-
+import os
+from detection_handling import ShapeHandling
 def testing_video():
-    cf = CameraFeed(f'tcp://192.168.0.102:9000')
+    #cf = CameraFeed(f'tcp://192.168.0.102:9000')
+    cf = CameraFeed(0)
     # frame = cf.read()
+    ADDRESS = os.environ.get("LOCAL_ADDRESS","localhost")
+    PORT = os.environ.get("LOCAL_PORT", 11295)
+    module = ShapeHandling(ADDRESS, PORT)
     
                 
     # cv2.imshow('Video Capture',frame)
@@ -13,10 +17,12 @@ def testing_video():
 
     while True:
         frame = cf.read()
-        frame = find_blue(frame)
-        cv2.imshow("testing", frame)
-        cv2.waitKey(0)
-        sys.exit() # to exit from all the processes
+        # cv2.imshow("testing", frame)
+        frame2 = ShapeHandling.find_squares(frame)
+        cv2.imshow("testing", frame2)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+        # sys.exit() # to exit from all the processes
  
     cv2.destroyAllWindows() # destroy all windows
 
