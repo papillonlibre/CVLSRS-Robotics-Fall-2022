@@ -271,11 +271,12 @@ class ShapeHandling(rm.ProtoModule):
 
 # runs every time one of the subscribed-to message types is received
     def msg_received(self, msg, msg_type):
+      # initializes the motor to -1 to achieve max range
         msg2 = RotationCommand()
         msg2.position = START_POS
         msg2.max_speed = 1
         self.write(msg2.SerializeToString(), MsgType.ROTATION_COMMAND)
-
+      # uses global rotation to sync between functions
         msg3.position = START_POS
         self.write(msg3.SerializeToString(), MsgType.ROTATION_COMMAND)
 
@@ -294,7 +295,7 @@ class ShapeHandling(rm.ProtoModule):
             cf2 = self.find_green(cf.read())
           
 
-          while (msg3.position != 1): # need to tilt to achieve full view
+          while (msg3.position != 1): # tilts to achieve full view
             # color detection on the new masked camera feed frame read
             if (msg.shape == 0):
               print("looking for squares")

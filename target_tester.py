@@ -31,8 +31,8 @@ class TargetSenderModule(rm.ProtoModule):
         input().lower()
 
         msg = Target()
-        msg.shape = 0 # square
-        msg.color = 0 # red
+        msg.shape = 0 # hardcoded square, can change for further testing
+        msg.color = 0 # hardcoded red, can change for further testing
 
         self.write(msg.SerializeToString(), MsgType.TARGET)
         print('sent', msg)
@@ -40,7 +40,7 @@ class TargetSenderModule(rm.ProtoModule):
 
 def main():
     print('press enter to send a target message!')
-    module = TargetSenderModule(ADDRESS, PORT)
+    module = TargetSenderModule(ADDRESS, PORT) # inits the module
     module.run()
 
 
