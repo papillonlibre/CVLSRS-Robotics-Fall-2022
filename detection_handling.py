@@ -171,8 +171,8 @@ class ShapeHandling(rm.ProtoModule):
           msg3.position = -1 # reset tilt value
           self.write(msg3.SerializeToString(), MsgType.TILT_COMMAND)
       # Showing the output for testing
-      # cv2.imshow("Output", output)
-      # cv2.waitKey(0)
+      cv2.imshow("Output", output_image)
+      cv2.waitKey(0)
       return output_image, triangle_count
     def find_squares(self, image, START_POS, msg3):
       print("FIND SQUARES WAS CALLED")
@@ -203,8 +203,8 @@ class ShapeHandling(rm.ProtoModule):
           print ("square not found")
         # print("DEBUGGING SQUARE_COUNT", square_count)
       # Showing the output for testing
-      # cv2.imshow("Output", output)
-      # cv2.waitKey(0)
+      cv2.imshow("Output", output_image)
+      cv2.waitKey(0)
       return output_image, square_count
   
     def find_octagons(self, image, START_POS, msg3):
@@ -234,8 +234,8 @@ class ShapeHandling(rm.ProtoModule):
           msg3.position = -1 # reset tilt value
           self.write(msg3.SerializeToString(), MsgType.TILT_COMMAND)
       # Showing the output for testing
-      # cv2.imshow("Output", output)
-      # cv2.waitKey(0)
+      cv2.imshow("Output", output_image)
+      cv2.waitKey(0)
       return output_image, octagons_count
   
     def find_circles(self, image, START_POS, msg3):
@@ -265,8 +265,8 @@ class ShapeHandling(rm.ProtoModule):
           self.write(msg_motor.SerializeToString(), MsgType.ROTATION_COMMAND)
           msg3.position = -1 # reset tilt value
           self.write(msg3.SerializeToString(), MsgType.TILT_COMMAND)
-      # cv2.imshow("Output", output_image)
-      # cv2.waitKey(0)
+      cv2.imshow("Output", output_image)
+      cv2.waitKey(0)
       return output_image, circle_count
 
 # runs every time one of the subscribed-to message types is received
@@ -284,7 +284,7 @@ class ShapeHandling(rm.ProtoModule):
         if (msg_type == MsgType.TARGET):
           # print ("target message was found")
           # control logic for detecting colors
-          if (msg.color== 0):
+          if (msg.color == 0):
             cf2 = self.find_red(cf.read())
           elif (msg.color == 1):
             cf2 = self.find_yellow(cf.read())
