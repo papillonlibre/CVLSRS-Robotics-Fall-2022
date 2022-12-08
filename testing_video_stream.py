@@ -6,12 +6,11 @@ from detection_handling import ShapeHandling
 def testing_video():
     #cf = CameraFeed(f'tcp://192.168.0.102:9000')
     cf = CameraFeed(0)
-    # frame = cf.read()
+    # frame = cf.read() # for testing
     ADDRESS = os.environ.get("LOCAL_ADDRESS","localhost")
     PORT = os.environ.get("LOCAL_PORT", 11295)
     module = ShapeHandling(ADDRESS, PORT)
     
-                
     # cv2.imshow('Video Capture',frame)
     # cv2.waitKey(0)
 

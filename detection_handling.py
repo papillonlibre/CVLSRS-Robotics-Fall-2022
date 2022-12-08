@@ -112,10 +112,10 @@ class ShapeHandling(rm.ProtoModule):
 
 
       output = cv2.drawContours(segmented_img, contours, -1, (0, 0, 255), 3)
+      return output
+      # Showing the output for testing
       # cv2.imshow("Output", output)
       # cv2.waitKey(0)
-      return output
-      # # Showing the output
     def find_blue(self,image):
       # convert to hsv colorspace
       # lower bound and upper bound for Blue color
@@ -137,11 +137,11 @@ class ShapeHandling(rm.ProtoModule):
       contours, hierarchy = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
 
-      output = cv2.drawContours(segmented_img, contours, -1, (0, 0, 255), 3)
+      output = cv2.drawContours(segmented_img, contours, -1, (0, 0, 255), 3) # outlines target in shape
+      return output
+      # Showing the output for testing
       # cv2.imshow("Output", output)
       # cv2.waitKey(0)
-      return output
-      # # Showing the output
       
     
     def find_triangles(self, image, START_POS, msg3):
@@ -160,7 +160,7 @@ class ShapeHandling(rm.ProtoModule):
           print("triangle found")
           triangle_count += 1
           e.send_pulse()
-          cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
+          cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3) # outlines target in shape
         if (triangle_count == 0 and msg3.position == 1): # when target not detected && tilt not finished
           print("no triangles")
           msg = RotationCommand()
@@ -170,9 +170,9 @@ class ShapeHandling(rm.ProtoModule):
           self.write(msg.SerializeToString(), MsgType.ROTATION_COMMAND)
           msg3.position = -1 # reset tilt value
           self.write(msg3.SerializeToString(), MsgType.TILT_COMMAND)
-      # cv2.imshow("Output", output_image)
-      # if cv2.waitKey(1) & 0xFF == ord('q'):
-      #       break
+      # Showing the output for testing
+      # cv2.imshow("Output", output)
+      # cv2.waitKey(0)
       return output_image, triangle_count
     def find_squares(self, image, START_POS, msg3):
       print("FIND SQUARES WAS CALLED")
@@ -190,7 +190,7 @@ class ShapeHandling(rm.ProtoModule):
           square_count += 1
           print("square found")
           e.send_pulse()
-          cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
+          cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3) # outlines target in shape
         if (square_count == 0 and msg3.position == 1): # when target not detected && tilt not finished
           print("no squares")
           msg = RotationCommand()
@@ -202,7 +202,8 @@ class ShapeHandling(rm.ProtoModule):
           self.write(msg3.SerializeToString(), MsgType.TILT_COMMAND)
           print ("square not found")
         # print("DEBUGGING SQUARE_COUNT", square_count)
-      # cv2.imshow("Output", output_image)
+      # Showing the output for testing
+      # cv2.imshow("Output", output)
       # cv2.waitKey(0)
       return output_image, square_count
   
@@ -222,7 +223,7 @@ class ShapeHandling(rm.ProtoModule):
           print("found octagon")
           octagons_count += 1
           e.send_pulse()
-          cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
+          cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3) # outlines target in shape
         if (octagons_count == 0 and msg3.position == 1): # when target not detected && tilt not finished
           print("no octagon found")
           msg = RotationCommand()
@@ -232,7 +233,8 @@ class ShapeHandling(rm.ProtoModule):
           self.write(msg.SerializeToString(), MsgType.ROTATION_COMMAND)
           msg3.position = -1 # reset tilt value
           self.write(msg3.SerializeToString(), MsgType.TILT_COMMAND)
-      # cv2.imshow("Output", output_image)
+      # Showing the output for testing
+      # cv2.imshow("Output", output)
       # cv2.waitKey(0)
       return output_image, octagons_count
   
@@ -251,7 +253,7 @@ class ShapeHandling(rm.ProtoModule):
         if len(approx) > 8: #might want to increase to fix the threshold
           print("circle found")
           circle_count += 1
-          cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
+          cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3) # outlines target in shape
           e.send_pulse(0)
         
         if (circle_count == 0 and msg3.position == 1): # when target not detected && tilt not finished
