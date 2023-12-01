@@ -72,7 +72,7 @@ class MotorModule(rm.ProtoModule):
         # picking rotation speed and direction based on PID controller
         current_pos = self.encoder.steps
         v = self.pid(current_pos)
-
+        print(current_pos)
         if v > 0:
             drive_func = self.rotation_motor.forward
         else:
