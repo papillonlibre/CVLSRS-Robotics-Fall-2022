@@ -1,34 +1,52 @@
-#!/usr/bin/ python3
+#!/usr/bin python3
 
 # NAME: testing_video_stream.py
-# PURPOSE: testing the video stream
-# AUTHOR: Vanessa Bellotti
+# PURPOSE: reading the most recent frame from a remote camera 
+#          stream on your local computer
 
-from remote_camera_reader import RemoteCameraFeed
-import cv2
-import sys
-import os
-# from detectionHandler import ShapeHandling
-def testing_video():
-    cf = RemoteCameraFeed(f'tcp://192.168.0.089:9000')
-    # cf = RemoteCameraFeed(0)
-    # frame = cf.read() # for testing
-    ADDRESS = os.environ.get("LOCAL_ADDRESS","localhost")
-    PORT = os.environ.get("LOCAL_PORT", 11295)
-    # module = ShapeHandling(ADDRESS, PORT)
-    
-    # cv2.imshow('Video Capture',frame)
-    # cv2.waitKey(0)
+import os, cv2, threading, queue
 
+ADDRESS = os.environ.get("STREAM_ADDRESS","192.168.0.89")
+PORT = os.environ.get("STREAM_PORT", 9000)
+
+
+class RemoteCameraFeed:
+
+    # PARAMETERS: source - URI of the remote stream
+    #                      (e.g. tcp://192.168.0.89:9000)
+    def __init__(self, source):
+        self.cap = cv2.VideoCapture(source)
+        self.q = queue.Queue()
+        t = threading.Thread(target=self._reader)
+        t.daemon = True
+        t.start()
+
+    # PURPOSE: continously reads from camera feed; discards unused frames
+    def _reader(self):
+        while True:
+            ret, frame = self.cap.read()
+            if not ret:
+                break
+            if not self.q.empty():
+                try:
+                    self.q.get_nowait()   # discard previous (unprocessed) frame
+                except queue.Empty:
+                    pass
+            self.q.put(frame)
+
+    # PURPOSE: retrieves and parses the most recent frame in the camera stream
+    # RETURNS: the frame, as a 3D numpy array (such that each pixel is a trio 
+    #          of RGB values)
+    def read(self):
+        return self.q.get()
+
+
+if __name__ == '__main__':
+    feed = RemoteCameraFeed(f'tcp://{ADDRESS}:{PORT}')
     while True:
-        frame = cf.read()
-        cv2.imshow("testing", frame)
-        # frame2 = ShapeHandling.find_squares(frame)
-        # cv2.imshow("testing", frame2)
+        frame = feed.read()
+
+        cv2.imshow('Camera Feed', frame)
+
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
-        # sys.exit() # to exit from all the processes
- 
-    cv2.destroyAllWindows() # destroy all windows
-
-testing_video()

@@ -1,0 +1,1 @@
+(trap 'kill 0' SIGINT; python3 server.py & python3 motor_module.py & python3 laser_module.py)
