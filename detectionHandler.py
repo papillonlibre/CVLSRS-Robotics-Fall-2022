@@ -4,7 +4,7 @@ import os
 import cv2
 import numpy as np
 import robomodules as rm
-from messages import MsgType, message_buffers, RotationCommand, TiltCommand
+from messages import MsgType, message_buffers, RotationCommand, TiltCommand, LaserCommand
 from local_camera_reader import LocalCameraFeed
 from laser_module import LaserModule
 
@@ -52,8 +52,9 @@ class ShapeHandling(rm.ProtoModule):
 
             if len(approx) == target_count:
                 count += 1
-                e.send_pulse()
-
+                msg = LaserCommand
+                seconds = 3
+                self.write(msg.SerializzeToString(), MsgType.LASER_COMMAND)
                 cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
 
             if count == 0 and msg3.position == 1:
@@ -84,10 +85,8 @@ class ShapeHandling(rm.ProtoModule):
         print("Finding circles")
         # Convert the image to grayscale
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
         # Apply GaussianBlur to reduce noise and improve circle detection
         gray = cv2.GaussianBlur(gray, (9, 9), 2)
-
         # Use Hough Circle Transform to detect circles
         circles = cv2.HoughCircles(
             gray,
