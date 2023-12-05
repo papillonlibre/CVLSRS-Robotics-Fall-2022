@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
 
 # NAME: remote_camera_reader.py
-# PURPOSE: wrapper class for reading the most recent frame from a camera stream
+# PURPOSE: wrapper class for reading the most recent frame from a remote camera 
+#          stream on your local computer
 # AUTHOR: this dude on stackoverflow tbh https://stackoverflow.com/a/54755738
 
-import cv2, threading, queue
+import os, cv2, threading, queue
+
+ADDRESS = os.environ.get("STREAM_ADDRESS","192.168.0.89")
+PORT = os.environ.get("STREAM_PORT", 9000)
 
 
-class CameraFeed:
+class RemoteCameraFeed:
 
     # PURPOSE: constructor
-    # PARAMETERS: source - source of the video stream. can be either be the URI 
-    #                      of a remote stream (e.g. tcp://192.168.0.102:9000), 
-    #                      or the integer index of a local camera (likely 0, 
-    #                      unless you have multiple cameras hooked up to your 
-    #                      computer)
+    # PARAMETERS: source - URI of the remote stream
+    #                      (e.g. tcp://192.168.0.89:9000)
     # RETURNS: N/A
     def __init__(self, source):
         self.cap = cv2.VideoCapture(source)
@@ -30,7 +31,6 @@ class CameraFeed:
     def _reader(self):
         while True:
             ret, frame = self.cap.read()
-            
             if not ret:
                 break
             if not self.q.empty():
@@ -46,3 +46,15 @@ class CameraFeed:
     #          of RGB values)
     def read(self):
         return self.q.get()
+
+
+if __name__ == '__main__':
+    feed = RemoteCameraFeed(f'tcp://{ADDRESS}:{PORT}')
+
+    while True:
+        frame = feed.read()
+
+        cv2.imshow('Camera Feed', frame)
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break

@@ -2,7 +2,7 @@ from camera_reader import CameraFeed
 import cv2
 import sys
 import os
-from detection_handling import ShapeHandling
+from detectionHandler import ShapeHandling
 def testing_video():
     #cf = CameraFeed(f'tcp://192.168.0.102:9000')
     cf = CameraFeed(0)
