@@ -1,4 +1,4 @@
-from camera_reader import CameraFeed
+from remote_camera_reader import CameraFeed
 import cv2
 import sys
 import os
