@@ -1,0 +1,7 @@
+syntax = "proto2";
+
+message LaserCommand {
+
+    required float seconds = 1;
+
+  }

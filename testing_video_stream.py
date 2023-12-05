@@ -1,11 +1,11 @@
-from remote_camera_reader import CameraFeed
+from remote_camera_reader import RemoteCameraFeed
 import cv2
 import sys
 import os
 from detectionHandler import ShapeHandling
 def testing_video():
-    #cf = CameraFeed(f'tcp://192.168.0.102:9000')
-    cf = CameraFeed(0)
+    #cf = RemoteCameraFeed(f'tcp://192.168.0.102:9000')
+    cf = RemoteCameraFeed(0)
     # frame = cf.read() # for testing
     ADDRESS = os.environ.get("LOCAL_ADDRESS","localhost")
     PORT = os.environ.get("LOCAL_PORT", 11295)

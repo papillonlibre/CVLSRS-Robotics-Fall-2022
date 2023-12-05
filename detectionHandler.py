@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 import robomodules as rm
 from messages import MsgType, message_buffers, RotationCommand, TiltCommand
-from camera_reader import CameraFeed
+from local_camera_reader import LocalCameraFeed
 from laser_module import LaserModule
 
 
@@ -16,8 +16,9 @@ PORT = os.environ.get("LOCAL_PORT", 11295)
 FREQUENCY = 2
 START_POS = -1
 
-cf = CameraFeed(0)
+cf = LocalCameraFeed(0)
 msg3 = TiltCommand()
+
 
 
 class ShapeHandling(rm.ProtoModule):
@@ -106,7 +107,7 @@ class ShapeHandling(rm.ProtoModule):
             circles = np.uint16(np.around(circles))
             for i in circles[0, :]:
                 circle_count += 1
-                e.send_pulse()
+                LaserModule(3)
                 # Draw the outer circle
                 cv2.circle(output_image, (i[0], i[1]), i[2], (255, 0, 0), 3)
 
@@ -152,13 +153,13 @@ class ShapeHandling(rm.ProtoModule):
 
             while msg3.position != 1:
                 if msg.shape == 0:
-                    output, count = self.find_squares(cf2, START_POS, msg3)
+                    output, _ = self.find_squares(cf2, START_POS, msg3)
                 elif msg.shape == 1:
-                    output, count = self.find_circles(cf2, START_POS, msg3)
+                    output, _ = self.find_circles(cf2, START_POS, msg3)
                 elif msg.shape == 2:
-                    output, count = self.find_triangles(cf2, START_POS, msg3)
+                    output, _ = self.find_triangles(cf2, START_POS, msg3)
                 elif msg.shape == 3:
-                    output, count = self.find_octagons(cf2, START_POS, msg3)
+                    output, _ = self.find_octagons(cf2, START_POS, msg3)
 
                 cv2.imshow("Testing", output)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
