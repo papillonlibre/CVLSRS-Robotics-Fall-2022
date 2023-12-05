@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+
+# NAME: testing_video_stream.py
+# PURPOSE: testing the video stream
+# AUTHOR: Vanessa Bellotti
+
 from remote_camera_reader import RemoteCameraFeed
 import cv2
 import sys
