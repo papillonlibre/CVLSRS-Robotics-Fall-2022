@@ -5,7 +5,8 @@ import cv2
 import numpy as np
 import robomodules as rm
 from messages import MsgType, message_buffers, RotationCommand, TiltCommand, LaserCommand
-from local_camera_reader import LocalCameraFeed
+# from local_camera_reader import LocalCameraFeed
+from remote_camera_reader import RemoteCameraFeed
 from laser_module import LaserModule
 
 
@@ -16,7 +17,7 @@ PORT = os.environ.get("LOCAL_PORT", 11295)
 FREQUENCY = 2
 START_POS = -1
 
-cf = LocalCameraFeed(0)
+cf = RemoteCameraFeed(0)
 msg3 = TiltCommand()
 
 
