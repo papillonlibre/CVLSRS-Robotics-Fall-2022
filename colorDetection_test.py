@@ -25,10 +25,10 @@ if __name__ == "__main__":
 
     # Define color ranges for each shape (adjust these values based on your requirements)
     color_ranges = {
-        "red": (np.array([0, 100, 100]), np.array([10, 255, 255])),
-        "yellow": (np.array([20, 100, 100]), np.array([30, 255, 255])),
-        "blue": (np.array([100, 150, 0]), np.array([140, 255, 255])),
-        "green": (np.array([30, 50, 100]), np.array([70, 255, 255])),
+        "red": (np.array([0, 100, 100]), np.array([15, 255, 255])),
+        "yellow": (np.array([20, 100, 100]), np.array([30, 175, 255])),
+        "blue": (np.array([100, 200, 100]), np.array([110, 255, 255])),
+        "green": (np.array([70, 100, 100]), np.array([85, 175, 255]))
     }
 
     # Open a connection to the camera (usually 0 for built-in camera)
@@ -36,7 +36,7 @@ if __name__ == "__main__":
 
     while True:
         # Read a frame from the camera
-        ret, frame = cap.read()
+        y , frame = cap.read()
 
         # Apply color detection for each color range
         for color, (lower_bound, upper_bound) in color_ranges.items():
