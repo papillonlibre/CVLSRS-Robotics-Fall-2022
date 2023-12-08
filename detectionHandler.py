@@ -12,10 +12,18 @@ from local_camera_reader import LocalCameraFeed
 # Retrieving address and port of robomodules server (from env vars)
 ADDRESS = os.environ.get("LOCAL_ADDRESS", "localhost")
 PORT = os.environ.get("LOCAL_PORT", 11295)
-FREQUENCY = 5
 
+# Behavior Parameters
 TESTING = True
 ONLYCOLOR = True
+
+# Speed/Adjustement Parameters ===============================================
+FREQUENCY = 5       # Tick rate (I like to think ticks per second)
+XADJUST = 15        # Adjustment denominator when found shape/color
+YADJUST = 480       # Higher adjustment means its moves less per pixel away
+ROTATE = 30         # Rotate per tick
+TILTMIN = -1        # Min tilt of the camera
+TILTMAX = .5        # Max tilt of the 
 
 class ShapeHandling(rm.ProtoModule):
     def __init__(self, addr, port):
@@ -112,10 +120,10 @@ class ShapeHandling(rm.ProtoModule):
             cY_av = sum(cYs) / len(cYs) 
 
             if not (220 < cY_av < 260):
-                self.tilt += (240 - cY_av) / 480
+                self.tilt += (240 - cY_av) / YADJUST
             
             if not (300 < cX_av < 340):
-                rotation += (cY_av - 320) / 15
+                rotation += (cY_av - 320) / XADJUST
             else:
                 rotation = 0
             
@@ -159,10 +167,10 @@ class ShapeHandling(rm.ProtoModule):
             cY_av = sum(cYs) / len(cYs) 
 
             if not (220 < cY_av < 260):
-                self.tilt += (240 - cY_av) / 480
+                self.tilt += (240 - cY_av) / YADJUST
             
             if not (300 < cX_av < 340):
-                rotation += (cY_av - 320) / 15
+                rotation += (cY_av - 320) / XADJUST
             else:
                 rotation = 0
             
@@ -216,13 +224,13 @@ class ShapeHandling(rm.ProtoModule):
             else:
                 self.tilt -= .5   
             
-            if self.tilt > .5 or self.tilt < -1:
+            if (self.tilt > TILTMAX and self.up) or (self.tilt < TILTMIN and not self.up):
                 self.up = not self.up
-                if self.tilt > .5:
-                    self.tilt = .5
+                if self.tilt > TILTMAX:
+                    self.tilt = TILTMAX
                 else:
-                    self.tilt = -1
-                self.msg2.position = 30
+                    self.tilt = TILTMIN
+                self.msg2.position = ROTATE
                 self.write(self.msg2.SerializeToString(), MsgType.ROTATION_COMMAND)
 
             self.msg3.position = self.tilt
@@ -230,8 +238,8 @@ class ShapeHandling(rm.ProtoModule):
         return
     
     def move_check(self, rotation):
-        if self.tilt > .5:
-            self.tilt = .5
+        if self.tilt > 1:
+            self.tilt = 1
         elif self.tilt < -1:
             self.tilt < -1
         
