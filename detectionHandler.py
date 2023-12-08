@@ -5,37 +5,37 @@ import cv2
 import numpy as np
 import robomodules as rm
 from messages import MsgType, message_buffers, RotationCommand, TiltCommand, LaserCommand
-# from local_camera_reader import LocalCameraFeed
-from remote_camera_reader import RemoteCameraFeed
+from local_camera_reader import LocalCameraFeed
+# from remote_camera_reader import RemoteCameraFeed
 
 
 # Retrieving address and port of robomodules server (from env vars)
 ADDRESS = os.environ.get("LOCAL_ADDRESS", "localhost")
 PORT = os.environ.get("LOCAL_PORT", 11295)
-FREQUENCY = 2
+FREQUENCY = 3
 
-TESTING = True
+TESTING = False
 
 class ShapeHandling(rm.ProtoModule):
     def __init__(self, addr, port):
         self.subscriptions = [MsgType.TARGET]
         super().__init__(addr, port, message_buffers, MsgType, FREQUENCY, self.subscriptions)
-        self.cf = RemoteCameraFeed(0)
+        self.cf = LocalCameraFeed()
         self.msg2 = RotationCommand()
+        self.msg2.max_speed = 2
         self.msg3 = TiltCommand()
 
         self.targetSearching = False
-        self.rotation = 0
+        self.foundShape = False
         self.tilt = 0
         self.up = True
         self.color = -1
         self.shape = -1
 
     def tick(self):
-        return self.move()
-
-        if not self.targetSearching:
-            return
+        self.move()
+        print(f"The color is {self.color}")
+        # return self.move()
 
         # control logic for detecting colors
         if self.color == 0: # Red
@@ -67,7 +67,7 @@ class ShapeHandling(rm.ProtoModule):
         
         # if TESTING:
         #     cv2.destroyAllWindows()
-        return self.move()
+        return
 
     def find_color(self, image, lower_bound, upper_bound):
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -83,21 +83,53 @@ class ShapeHandling(rm.ProtoModule):
     def find_shapes(self, image, shape_name, target_count):
         edges = cv2.Canny(image, 30, 200)
         contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        # contours = imutils.grab_contours(contours)
+
 
         output_image = image.copy()
         count = 0
+        self.foundShape = False
 
         for contour in contours:
-            approx = cv2.approxPolyDP(contour, 1.95, True)
+            M = cv2.moments(contour)
+            if (M["m00"] == 0):
+                continue
+            cX = int(M["m10"]/ M["m00"])
+            cY = int(M["m01"]/ M["m00"])
+            
 
+            # print(f"The cX is {cX} and the cY is {cY}\n")
+
+            approx = cv2.approxPolyDP(contour, 1.95, True)
             if len(approx) == target_count:
                 count += 1
-                seconds = 5
-                msg = LaserCommand(seconds) 
+                seconds = 2
+                msg = LaserCommand()
+                msg.seconds = seconds
                 self.targetSearching = False
-                self.write(msg.SerializeToString(), MsgType.LASER_COMMAND)
+                self.foundShape = True
+                
                 cv2.drawContours(output_image, [approx], -1, (255, 0, 0), 3)
+        
+        if not self.foundShape:
+            self.targetSearching = True
+        else:
+            if (cY < 220):
+                self.tilt += .3
+            elif (cY > 260):
+                self.tilt -= .3
 
+            if (cX < 300):
+                self.msg2.position = -10
+            elif (cX > 340):
+                self.msg2.position = 10
+            
+            if ((220 < cY < 260) and (300 < cX < 340)):
+                self.write(msg.SerializeToString(), MsgType.LASER_COMMAND)
+
+            self.write(self.msg2.SerializeToString(), MsgType.ROTATION_COMMAND)
+            self.msg3.position = self.tilt
+            self.write(self.msg3.SerializeToString(), MsgType.TILT_COMMAND)
         return output_image, count
 
     def find_triangles(self, image):
@@ -146,21 +178,20 @@ class ShapeHandling(rm.ProtoModule):
         return output_image, circle_count
     
     def move(self):
-        if self.targetSearching:
+        # print(f"The tilt is {self.tilt}")
+        if self.targetSearching and not self.foundShape:
             if self.up:
-                self.tilt += 1
+                self.tilt += .5
             else:
-                self.tilt -= 1
+                self.tilt -= .5   
             
-            if self.tilt > 1 or self.tilt < -1:
-                self.rotation += 15
-                # self.rotation += 45
+            if self.tilt > .5 or self.tilt < -1:
                 self.up = not self.up
-                if self.tilt > 1:
-                    self.tilt = 1
+                if self.tilt > .5:
+                    self.tilt = .5
                 else:
                     self.tilt = -1
-                self.msg2.position = self.rotation
+                self.msg2.position = 15
                 self.write(self.msg2.SerializeToString(), MsgType.ROTATION_COMMAND)
 
             self.msg3.position = self.tilt
@@ -169,6 +200,7 @@ class ShapeHandling(rm.ProtoModule):
 
 
     def msg_received(self, msg, msg_type):
+        print("Message received!")
         if (msg_type == MsgType.TARGET):
             self.color = msg.color
             self.shape = msg.shape
@@ -176,6 +208,7 @@ class ShapeHandling(rm.ProtoModule):
 
 
 def main():
+    print("STARTING THE PI")
     module = ShapeHandling(ADDRESS, PORT)
     module.run()
 
