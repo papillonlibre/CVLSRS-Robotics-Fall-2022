@@ -14,16 +14,18 @@ ADDRESS = os.environ.get("LOCAL_ADDRESS", "localhost")
 PORT = os.environ.get("LOCAL_PORT", 11295)
 
 # Behavior Parameters
-TESTING = True
+TESTING = False
 ONLYCOLOR = True
 
 # Speed/Adjustement Parameters ===============================================
 FREQUENCY = 5       # Tick rate (I like to think ticks per second)
 XADJUST = 15        # Adjustment denominator when found shape/color
-YADJUST = 480       # Higher adjustment means its moves less per pixel away
+YADJUST = 480*2     # Higher adjustment means its moves less per pixel away
 ROTATE = 30         # Rotate per tick
 TILTMIN = -1        # Min tilt of the camera
 TILTMAX = .5        # Max tilt of the 
+
+# ROTATE = 15         # Rotate per tick
 
 class ShapeHandling(rm.ProtoModule):
     def __init__(self, addr, port):
@@ -44,9 +46,10 @@ class ShapeHandling(rm.ProtoModule):
     def tick(self):
         # control logic for detecting colors
         if self.color == 0: # Red
-            cf2 = self.find_color(self.cf.read(), np.array([0, 100, 100]), np.array([15, 255, 255]))
+            cf2 = self.find_color(self.cf.read(), np.array([170, 100, 100]), np.array([180, 255, 255]))
+            # cf2 = self.find_color(self.cf.read(), np.array([0, 100, 100]), np.array([15, 255, 255]))
         elif self.color == 1: # Yellow
-            cf2 = self.find_color(self.cf.read(), np.array([20, 100, 100]), np.array([30, 175, 255]))
+            cf2 = self.find_color(self.cf.read(), np.array([20, 100, 100]), np.array([30, 255, 255]))
         elif self.color == 2: # Blue
             cf2 = self.find_color(self.cf.read(), np.array([100, 200, 100]), np.array([110, 255, 255]))
         elif self.color == 3: # Green
@@ -56,6 +59,7 @@ class ShapeHandling(rm.ProtoModule):
             return
         
         if ONLYCOLOR:
+            # pass
             self.find_close(cf2)
         else:
             if self.shape == 0: # Square
@@ -69,6 +73,7 @@ class ShapeHandling(rm.ProtoModule):
             else: # Not a valid shape
                 return
         
+        self.move()
         if TESTING:
             color = ["Red", "Yellow", "Blue", "Green"]
             shape = ["Square", "Circle", "Triangle", "Octagon"]
@@ -76,11 +81,12 @@ class ShapeHandling(rm.ProtoModule):
                 print(f'Searching for: {color[self.color]}')
             else:
                 print(f'Searching for: {color[self.color]} {shape[self.shape]}')
-        return self.move()
+        return
 
 
     def find_color(self, image, lower_bound, upper_bound):
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        # print(hsv[240][320])
         mask = cv2.inRange(hsv, lower_bound, upper_bound)
         kernel = np.ones((7, 7), np.uint8)
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
@@ -95,57 +101,21 @@ class ShapeHandling(rm.ProtoModule):
         edges = cv2.Canny(image, 30, 200)
         contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         self.lastSeen += 1
-        foundShape = False
-        cXs = []
-        cYs = []
-
-        for contour in contours:
-            if cv2.contourArea(contour) < 20:
-                continue
-            
-            M = cv2.moments(contour)
-            if (M["m00"] == 0):
-                continue
-            cX = int(M["m10"]/ M["m00"])
-            cY = int(M["m01"]/ M["m00"])
-
-            cXs.append(cX)
-            cYs.append(cY)
-            foundShape = True
-
-        self.targetSearching = not foundShape
-        if foundShape:
-            self.lastSeen = 0
-            cX_av = sum(cXs) / len(cXs) 
-            cY_av = sum(cYs) / len(cYs) 
-
-            if not (220 < cY_av < 260):
-                self.tilt += (240 - cY_av) / YADJUST
-            
-            if not (300 < cX_av < 340):
-                rotation += (cY_av - 320) / XADJUST
-            else:
-                rotation = 0
-            
-            if ((220 < cY < 260) and (300 < cX < 340)):
-                msg = LaserCommand()
-                msg.seconds = 1 / FREQUENCY
-                self.write(msg.SerializeToString(), MsgType.LASER_COMMAND)
-
-            self.move_check(rotation)
-        return
-
+        return self.check_contour(contours, -1)
 
     def find_shapes(self, image, target_count):
         edges = cv2.Canny(image, 30, 200)
         contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         self.lastSeen += 1
-        foundShape = False
+        return self.check_contour(contours, target_count)
+    
+    
+    def check_contour(self, contours, target_count):
         cXs = []
         cYs = []
 
         for contour in contours:
-            if cv2.contourArea(contour) < 20:
+            if cv2.contourArea(contour) < 1000:
                 continue
             
             M = cv2.moments(contour)
@@ -153,33 +123,19 @@ class ShapeHandling(rm.ProtoModule):
                 continue
             cX = int(M["m10"]/ M["m00"])
             cY = int(M["m01"]/ M["m00"])
-            
-            approx = cv2.approxPolyDP(contour, 1.95, True)
-            if len(approx) == target_count:
+
+            if (target_count != -1):
+                approx = cv2.approxPolyDP(contour, 1.95, True)
+                if len(approx) == target_count:
+                    cXs.append(cX)
+                    cYs.append(cY)
+            else:
                 cXs.append(cX)
                 cYs.append(cY)
-                foundShape = True
 
-        self.targetSearching = not foundShape
-        if foundShape:
-            self.lastSeen = 0
-            cX_av = sum(cXs) / len(cXs) 
-            cY_av = sum(cYs) / len(cYs) 
-
-            if not (220 < cY_av < 260):
-                self.tilt += (240 - cY_av) / YADJUST
-            
-            if not (300 < cX_av < 340):
-                rotation += (cY_av - 320) / XADJUST
-            else:
-                rotation = 0
-            
-            if ((220 < cY < 260) and (300 < cX < 340)):
-                msg = LaserCommand()
-                msg.seconds = 1 / FREQUENCY
-                self.write(msg.SerializeToString(), MsgType.LASER_COMMAND)
-
-            self.move_check(rotation)
+            self.targetSearching = len(cXs) == 0
+            if not self.targetSearching:
+                self.found_move(cXs, cYs)
         return
 
 
@@ -201,24 +157,19 @@ class ShapeHandling(rm.ProtoModule):
         circles = cv2.HoughCircles( blurred, cv2.HOUGH_GRADIENT, dp=1,
             minDist=50, param1=50, param2=30, minRadius=70, maxRadius=90)
 
+        self.lastSeen += 1
         output_image = image.copy()
-        circle_count = 0
         if circles is not None:
             circles = np.uint16(np.around(circles))
-            for i in circles[0, :]:
-                count += 1
-                seconds = 5
-                msg = LaserCommand(seconds)
-                self.targetSearching = False
-                self.write(msg.SerializeToString(), MsgType.LASER_COMMAND)
-                # Draw the outer circle
-                cv2.circle(output_image, (i[0], i[1]), i[2], (255, 0, 0), 3)
-
-        return output_image, circle_count
+            # Convert circles to contours
+            contours = [np.array([[[i[0], i[1]]]], dtype=np.int32) for circle in circles]
+            self.check_contour(contours, -1)
+        return 
     
 
     def move(self):
-        if self.targetSearching and self.lastSeen > 1:
+        if self.targetSearching and self.lastSeen > 3:
+            print("Moved | ")
             if self.up:
                 self.tilt += .5
             else:
@@ -237,7 +188,28 @@ class ShapeHandling(rm.ProtoModule):
             self.write(self.msg3.SerializeToString(), MsgType.TILT_COMMAND)
         return
     
-    def move_check(self, rotation):
+    def found_move(self, cXs, cYs):
+        self.lastSeen = 0
+        cX_av = sum(cXs) / len(cXs) 
+        cY_av = sum(cYs) / len(cYs)
+        # print(f"{cX_av}, {cY_av} ", end = "")
+        # print(f"{cXs}, {cYs} | ", end = "")
+        # print(f"; {len(cXs)} ; ", end = "")
+
+        if not (260 < cY_av < 300):
+            self.tilt += (cY_av - 280) / YADJUST
+        
+        if not (300 < cX_av < 340):
+            rotation = (cX_av - 320) / XADJUST
+        else:
+            rotation = 0
+        
+        if ((260 < cY_av < 300) and (300 < cX_av < 340)):
+            print("LASER!")
+            msg = LaserCommand()
+            msg.seconds = 1 / FREQUENCY
+            self.write(msg.SerializeToString(), MsgType.LASER_COMMAND)
+
         if self.tilt > 1:
             self.tilt = 1
         elif self.tilt < -1:
